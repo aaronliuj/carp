@@ -3,6 +3,7 @@
 
 
 import configparser
+import logging
 
 '''
 
@@ -14,32 +15,41 @@ source=tushare
 token=xxxxxx
 '''
 
+CONFIG_FILENAME = 'backend.conf'
 
-CONFIG_FILENAME = 'server.conf'
-
-
-TUSHARE_SECTION_NAME = 'tushare'
-MYSQL_SECTION_NAME = 'mysql'
+TUSHARE = 'tushare'
 
 __config = configparser.ConfigParser()
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('fb')
 
 try:
     __config.read(CONFIG_FILENAME)
 except FileNotFoundError:
-    print("File is not found.")
+    logger.error("File is not found.")
 
 
 
-def getOptions(name):
-    return dict(__config._sections[name])
+def getSection(name):
+    return dict(__config._sections[name]) if __config.has_section(name) else None
+
+
+def getGlobal():
+    return getSection('global')
 
 def getSource():
-    source = __config['global'].get('source', TUSHARE_SECTION_NAME)
-    return getOptions(TUSHARE_SECTION_NAME)
+    name = __config['global'].get('source', TUSHARE)
+    src = getSection(name)
+    if src is not None:
+        return (name, src)
+    else:
+        raise RuntimeError('not implement')
 
 
 if __name__ == "__main__":
-    print(getSource())
+    logger.info(getSource())
+    logger.info(getSection('vvv'))
 
 
 
